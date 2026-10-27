@@ -199,10 +199,10 @@ final class _PlantBuilder {
   }
 
   void _error(PlantDiagnosticCode code, String message, [String? elementId, String? connectionId]) => _diagnostics
-      .add(PlantDiagnostic(Severity.error, code, message, elementId: elementId, connectionId: connectionId));
+      .add(PlantDiagnostic(PlantSeverity.error, code, message, elementId: elementId, connectionId: connectionId));
 
   void _warning(PlantDiagnosticCode code, String message, [String? elementId, String? connectionId]) => _diagnostics
-      .add(PlantDiagnostic(Severity.warning, code, message, elementId: elementId, connectionId: connectionId));
+      .add(PlantDiagnostic(PlantSeverity.warning, code, message, elementId: elementId, connectionId: connectionId));
 }
 
 final class _UnionFind {

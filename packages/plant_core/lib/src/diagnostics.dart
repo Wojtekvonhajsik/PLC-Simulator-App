@@ -1,4 +1,4 @@
-enum Severity { error, warning }
+enum PlantSeverity { error, warning }
 
 enum PlantDiagnosticCode {
   duplicateId,
@@ -24,13 +24,13 @@ enum PlantDiagnosticCode {
 final class PlantDiagnostic {
   const PlantDiagnostic(this.severity, this.code, this.message, {this.elementId, this.connectionId});
 
-  final Severity severity;
+  final PlantSeverity severity;
   final PlantDiagnosticCode code;
   final String message;
   final String? elementId;
   final String? connectionId;
 
-  bool get isError => severity == Severity.error;
+  bool get isError => severity == PlantSeverity.error;
 
   @override
   String toString() {

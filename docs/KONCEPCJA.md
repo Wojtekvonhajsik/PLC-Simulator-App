@@ -317,19 +317,22 @@ testów i przyszłych ćwiczeń z automatyczną weryfikacją.
 
 ## 9. Plan etapów
 
-1. **Silnik PLC** — model LAD, IR, cykl skanowania, logika bitowa, zbocza, TON/TOF/TP/TONR,
-   CTU/CTD/CTUD, komparatory; testy jednostkowe.
-2. **Silnik schematu** — model elementów i portów, propagacja stanów linii, zawory 3/2, 5/2, 5/3,
-   siłowniki, kontaktrony, czujnik indukcyjny; testy jednostkowe.
+1. ✅ **Silnik PLC** (`packages/plc_core`) — model LAD, IR, cykl skanowania, logika bitowa, zbocza,
+   TON/TOF/TP/TONR, CTU/CTD/CTUD, komparatory; testy jednostkowe.
+2. ✅ **Silnik schematu** (`packages/plant_core`) — model elementów i portów, propagacja stanów linii,
+   zawory 3/2, 5/2, 5/3, siłowniki, dławiki, kontaktrony, czujniki indukcyjne i krańcowe, presostat;
+   testy jednostkowe.
+   ✅ **Sprzężenie** (`packages/sim_engine`) — powiązania sygnałów z adresami PLC, wspólna pętla
+   czasu, zegar symulacji; testy end-to-end (sekwencja A+ B+ A- B-).
 3. **Edytor LAD** — sieci, gałęzie, tagi, zapis projektu.
 4. **Edytor schematów — widok symbolowy** — paleta, przeciąganie, przewody, montaż czujników
    na siłowniku, właściwości, walidacja. Widok symbolowy pierwszy, bo grafika rysowana kodem
    jest gotowa szybciej i weryfikuje mechanikę edytora.
 5. **Edytor schematów — widok obrazkowy** — zasoby SVG, renderery obrazkowe, automatyczne
    rozmieszczenie między widokami.
-6. **Integracja i monitoring** — RUN/STOP, podgląd przepływu prądu, animacja schematu, wymuszanie.
+6. **Integracja i monitoring w UI** — RUN/STOP, podgląd przepływu prądu, animacja schematu, wymuszanie.
 7. **Rozszerzenia** — moduł I/O z okablowaniem, taśmociąg i detale (czujniki pojemnościowe
-   i optyczne w praktyce), presostat, szablony i ćwiczenia z automatyczną weryfikacją.
+   i optyczne w praktyce), szablony i ćwiczenia z automatyczną weryfikacją.
 
 ## 10. Ryzyka i decyzje
 

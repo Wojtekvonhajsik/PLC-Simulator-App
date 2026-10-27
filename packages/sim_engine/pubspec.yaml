@@ -1,0 +1,17 @@
+name: sim_engine
+description: Couples the PLC runtime with the plant simulation - I/O binding, simulation loop and clock.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  plant_core:
+    path: ../plant_core
+  plc_core:
+    path: ../plc_core
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

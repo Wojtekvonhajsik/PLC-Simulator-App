@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [plc_core, plant_core]
+        package: [plc_core, plant_core, sim_engine]
     defaults:
       run:
         working-directory: packages/${{ matrix.package }}
