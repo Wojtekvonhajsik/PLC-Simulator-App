@@ -1,8 +1,12 @@
 # Koncepcja: mobilny symulator PLC (LAD + edytor schematów obiektu)
 
-Status: wersja 2, szkic do dyskusji przed implementacją.
+Status: wersja 3, szkic do dyskusji przed implementacją.
 
-Zmiany względem wersji 1:
+Zmiany w wersji 3:
+- edytor schematów ma **dwa widoki**: obrazkowy (realistyczne elementy) i symbolowy (ISO 1219),
+- ustalona architektura aplikacji (rozdział 8).
+
+Zmiany w wersji 2:
 - symulator obiektu zastąpiony **edytorem schematów** — użytkownik buduje stanowisko
   z biblioteki elementów (zawory, siłowniki, różne typy czujników, przyciski, lampki)
   i sam je łączy, np. decyduje, czy siłownik ma kontaktrony i gdzie,
@@ -164,15 +168,42 @@ Zamiast tego:
   Siłownik jednostronny: zasilony → wysuw, odpowietrzony → powrót sprężyną.
 - Czujniki wyliczane z pozycji tłoka i obiektów w zasięgu.
 
-### 5.5 Tryby ekranu
-- **Edycja:** paleta elementów (szuflada z kategoriami), przeciąganie, połączenia,
-  panel właściwości po przytrzymaniu.
-- **Symulacja:** linie zasilone podświetlone, animacja tłoka, czujniki i lampki
-  zmieniają kolor; przyciski klikalne; ręczne przesterowanie zaworu (jak przycisk
-  ręczny na cewce w rzeczywistości).
-- Na tablecie widok dzielony: LAD + schemat.
+### 5.5 Dwa widoki schematu: obrazkowy i symbolowy
 
-### 5.6 Szablony
+Ten sam schemat można oglądać i edytować w dwóch widokach, przełączanych jednym przyciskiem.
+
+| | Widok obrazkowy | Widok symbolowy |
+|---|---|---|
+| Wygląd | realistyczne ilustracje 2D (siłownik z tłoczyskiem, wyspa zaworowa, czujniki na korpusie, wężyki, panel z przyciskami) | symbole wg ISO 1219 (pneumatyka) i IEC 60617 (przyciski, lampki, czujniki) |
+| Do czego | intuicyjne budowanie stanowiska „jak na stole laboratoryjnym”, dla początkujących | nauka czytania i rysowania schematów, dokumentacja |
+| Przewody | wężyki pneumatyczne prowadzone łukami | linie proste, pod kątem prostym, układ warstwowy |
+| Symulacja | ruch tłoczyska, diody na czujnikach i cewkach, wężyki zasilone podświetlone | przesuwanie pól zaworu, ruch tłoczyska w symbolu, linie zasilone podświetlone |
+
+Zasady:
+- **Wspólny model, osobne rozmieszczenie.** Elementy, ich parametry, połączenia,
+  zamocowania czujników i adresy są wspólne dla obu widoków. Każdy widok przechowuje tylko
+  własne położenia i obroty elementów. Zmiana w jednym widoku (dodanie zaworu, nowe połączenie,
+  przesunięcie kontaktronu na skoku) natychmiast pojawia się w drugim.
+- **Dlaczego nie wspólne położenia:** elementy mają w obu widokach inne wymiary i inne
+  rozmieszczenie portów, a schemat symbolowy ma przyjęty układ (siłowniki u góry,
+  zawory pod nimi, zasilanie na dole). Wspólne współrzędne dawałyby nakładające się
+  elementy i nieczytelny schemat.
+- **Automatyczne rozmieszczenie:** element dodany w jednym widoku dostaje w drugim
+  pozycję wyliczoną automatycznie (w symbolowym — warstwowo wg roli elementu;
+  w obrazkowym — obok elementu, z którym jest połączony). Użytkownik może ją poprawić.
+  Przycisk „uporządkuj schemat” przelicza układ od nowa.
+- **Przewody nie są zapisywane jako geometria** — trasa liczona przy rysowaniu, w każdym
+  widoku po swojemu. Opcjonalnie zapisywane są punkty pośrednie dodane ręcznie.
+
+### 5.6 Tryby ekranu
+- **Edycja:** paleta elementów (szuflada z kategoriami, ikony zgodne z bieżącym widokiem),
+  przeciąganie, połączenia, panel właściwości po przytrzymaniu.
+- **Symulacja:** stan linii, animacja tłoka, czujniki i lampki zmieniają kolor;
+  przyciski klikalne; ręczne przesterowanie zaworu (jak przycisk ręczny na cewce).
+- Na tablecie widok dzielony: LAD + schemat; można też pokazać obok siebie
+  widok obrazkowy i symbolowy.
+
+### 5.7 Szablony
 Gotowe stanowiska jako punkt startu i zadania:
 - start–stop z samopodtrzymaniem,
 - siłownik 1A z zaworem 5/2 monostabilnym i dwoma kontaktronami,
@@ -188,21 +219,101 @@ Gotowe stanowiska jako punkt startu i zadania:
 - Projekt = program LAD + schemat + tagi, zapis lokalny (JSON).
 - Eksport/import pliku projektu (systemowe „Udostępnij”).
 
-## 8. Technologia (rekomendacja)
+## 8. Architektura
 
-**Flutter (Dart)** — Android + iOS z jednej bazy, wydajne rysowanie własnych widoków
-(`CustomPainter`) dla drabinki i schematu, dobre wsparcie testów.
+### 8.1 Decyzje
+
+| Obszar | Wybór | Uzasadnienie |
+|---|---|---|
+| Framework | **Flutter (Dart)** | Android + iOS z jednej bazy, własne rysowanie przez `CustomPainter` przy 60 fps |
+| Rdzeń | czyste pakiety Dart bez zależności od Fluttera | testowalne jednostkowo, możliwe uruchamianie symulacji w testach i z linii poleceń |
+| Stan aplikacji | Riverpod | przewidywalny, testowalny, bez globalnych singletonów |
+| Model danych | niemutowalne klasy + serializacja JSON (`freezed`, `json_serializable`) | łatwe cofnij/ponów i zapis projektu |
+| Cofnij/ponów | wzorzec Command na modelu dokumentu | jedna historia dla edycji w obu widokach |
+| Grafika — widok symbolowy | rysowana kodem (`CustomPainter`) | symbole są proste i muszą reagować na stan (przesuwanie pól zaworu) |
+| Grafika — widok obrazkowy | warstwy SVG (korpus, tłoczysko, dioda…) składane i animowane w kodzie | realistyczny wygląd bez rysowania wszystkiego ręcznie w kodzie |
+| Zapis | lokalne pliki JSON z numerem wersji formatu | migracje przy zmianach formatu |
+
+### 8.2 Warstwy i pakiety
 
 ```
-lib/
-  core/        # model LAD, kompilator, runtime, timery, liczniki, zbocza, komparatory
-  plant/       # model schematu: elementy, porty, linie, propagacja stanów, fizyka siłowników
-  editor_lad/  # UI edytora LAD
-  editor_plant/# UI edytora schematów i trybu symulacji
-  tags/        # tablica tagów i obserwacji
-  storage/     # zapis/odczyt projektów
-test/
+packages/
+  plc_core/        # czysty Dart: model LAD, kompilator do IR, runtime, timery, liczniki,
+                   # zbocza, komparatory, tablica tagów
+  plant_core/      # czysty Dart: katalog typów elementów, porty, połączenia, zamocowania
+                   # czujników, propagacja stanów linii, dynamika siłowników
+  sim_engine/      # czysty Dart: zegar symulacji, sprzężenie PLC <-> obiekt, scenariusze testowe
+app/
+  lib/
+    features/
+      lad_editor/      # UI edytora LAD + monitoring
+      plant_editor/    # wspólna logika edycji schematu (zaznaczanie, przeciąganie, łączenie)
+        views/
+          symbolic/    # renderery symboli ISO/IEC
+          pictorial/   # renderery obrazkowe + zasoby SVG
+      tags/            # tablica tagów i obserwacji
+      projects/        # lista projektów, zapis/odczyt, szablony
+    shared/            # motyw, komponenty UI
+  test/
 ```
+
+### 8.3 Katalog elementów — jeden typ, dwa renderery
+
+Każdy typ elementu jest opisany raz i ma dwa renderery:
+
+```dart
+// plant_core — logika, bez UI
+abstract class ElementType {
+  String get id;                       // np. 'valve_5_2_mono'
+  List<PortDef> get ports;             // np. 1, 2, 4, 3, 5, Y1
+  ParamSchema get params;              // parametry edytowalne w panelu właściwości
+  ElementBehavior createBehavior();    // reakcja na stan linii, cewek, czas
+}
+
+// app — wygląd, osobno dla każdego widoku
+abstract class ElementRenderer {
+  Size size(ElementInstance e);
+  Offset portAnchor(ElementInstance e, String portId); // porty leżą w innych miejscach w każdym widoku
+  Rect? mountZone(ElementInstance e);                  // np. obszar korpusu siłownika do montażu czujników
+  void paint(Canvas c, ElementInstance e, ElementState? s); // s == null w trybie edycji
+}
+```
+
+Dodanie nowego elementu = definicja typu + renderer symbolowy + renderer obrazkowy
++ wpis w palecie. Reszta (edycja, zapis, symulacja, walidacja) działa bez zmian.
+
+### 8.4 Model dokumentu (format projektu)
+
+```
+Project
+├─ tags[]                      nazwa, adres, typ, komentarz
+├─ program
+│  └─ networks[]               drzewo Series/Parallel z instrukcjami
+└─ plant
+   ├─ elements[]               id, typeId, params, adresy %I/%Q
+   ├─ connections[]            (elementId.port) ↔ (elementId.port)
+   ├─ mounts[]                 czujnik → siłownik, pozycja na skoku
+   └─ layouts
+      ├─ symbolic  { elementId → x, y, obrót; punkty pośrednie przewodów }
+      └─ pictorial { elementId → x, y, obrót; punkty pośrednie przewodów }
+```
+
+### 8.5 Pętla symulacji
+
+Stały krok czasu (domyślnie 10 ms), niezależny od częstotliwości odświeżania ekranu:
+
+```
+co krok:
+  1. obiekt: aktualizacja pozycji siłowników, stanów linii, czujników
+  2. PLC: odczyt czujników/przycisków → obraz wejść
+  3. PLC: wykonanie programu (jeden cykl skanowania)
+  4. PLC: obraz wyjść → cewki zaworów, lampki
+ekran (60 fps): rysuje ostatni stan (snapshot), niczego nie liczy
+```
+
+Zegar z akumulatorem pozwala na pauzę, krok o jeden cykl i zmianę tempa bez zmiany wyników.
+Symulacja jest deterministyczna, więc te same wejścia zawsze dają ten sam przebieg — podstawa
+testów i przyszłych ćwiczeń z automatyczną weryfikacją.
 
 ## 9. Plan etapów
 
@@ -211,10 +322,13 @@ test/
 2. **Silnik schematu** — model elementów i portów, propagacja stanów linii, zawory 3/2, 5/2, 5/3,
    siłowniki, kontaktrony, czujnik indukcyjny; testy jednostkowe.
 3. **Edytor LAD** — sieci, gałęzie, tagi, zapis projektu.
-4. **Edytor schematów** — paleta, przeciąganie, przewody, montaż czujników na siłowniku,
-   właściwości, walidacja.
-5. **Integracja i monitoring** — RUN/STOP, podgląd przepływu prądu, animacja schematu, wymuszanie.
-6. **Rozszerzenia** — moduł I/O z okablowaniem, taśmociąg i detale (czujniki pojemnościowe
+4. **Edytor schematów — widok symbolowy** — paleta, przeciąganie, przewody, montaż czujników
+   na siłowniku, właściwości, walidacja. Widok symbolowy pierwszy, bo grafika rysowana kodem
+   jest gotowa szybciej i weryfikuje mechanikę edytora.
+5. **Edytor schematów — widok obrazkowy** — zasoby SVG, renderery obrazkowe, automatyczne
+   rozmieszczenie między widokami.
+6. **Integracja i monitoring** — RUN/STOP, podgląd przepływu prądu, animacja schematu, wymuszanie.
+7. **Rozszerzenia** — moduł I/O z okablowaniem, taśmociąg i detale (czujniki pojemnościowe
    i optyczne w praktyce), presostat, szablony i ćwiczenia z automatyczną weryfikacją.
 
 ## 10. Ryzyka i decyzje
@@ -226,4 +340,10 @@ test/
   Etapy 1–2 bez UI pozwalają wcześnie zweryfikować logikę.
 - **Wierność fizyki** — model jakościowy celowo pomija ciśnienia, siły i masy.
   Należy to jasno komunikować.
-- **Znaki towarowe** — bez nazw i grafik Siemens.
+- **Grafika widoku obrazkowego** — to największy koszt nie-programistyczny. Każdy element
+  wymaga zestawu warstw SVG w spójnym stylu. Plan: na start własne, płaskie ilustracje wektorowe;
+  docelowo ewentualnie grafik.
+- **Synchronizacja dwóch widoków** — wymaga dyscypliny: każda operacja edycji działa na
+  wspólnym modelu, widoki są tylko projekcją. Żadnej logiki zależnej od widoku w `plant_core`.
+- **Znaki towarowe** — bez nazw i grafik Siemens ani producentów pneumatyki (np. Festo, SMC)
+  w ilustracjach.
