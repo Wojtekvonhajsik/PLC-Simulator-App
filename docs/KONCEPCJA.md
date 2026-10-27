@@ -228,7 +228,7 @@ Gotowe stanowiska jako punkt startu i zadania:
 | Framework | **Flutter (Dart)** | Android + iOS z jednej bazy, własne rysowanie przez `CustomPainter` przy 60 fps |
 | Rdzeń | czyste pakiety Dart bez zależności od Fluttera | testowalne jednostkowo, możliwe uruchamianie symulacji w testach i z linii poleceń |
 | Stan aplikacji | Riverpod | przewidywalny, testowalny, bez globalnych singletonów |
-| Model danych | niemutowalne klasy + serializacja JSON (`freezed`, `json_serializable`) | łatwe cofnij/ponów i zapis projektu |
+| Model danych | niemutowalne klasy; w pakietach rdzenia pisane ręcznie, bez generatorów kodu (zero zależności); serializacja JSON dodawana razem z zapisem projektu | łatwe cofnij/ponów i zapis projektu |
 | Cofnij/ponów | wzorzec Command na modelu dokumentu | jedna historia dla edycji w obu widokach |
 | Grafika — widok symbolowy | rysowana kodem (`CustomPainter`) | symbole są proste i muszą reagować na stan (przesuwanie pól zaworu) |
 | Grafika — widok obrazkowy | warstwy SVG (korpus, tłoczysko, dioda…) składane i animowane w kodzie | realistyczny wygląd bez rysowania wszystkiego ręcznie w kodzie |

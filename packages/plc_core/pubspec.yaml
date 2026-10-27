@@ -1,0 +1,11 @@
+name: plc_core
+description: PLC engine for the simulator - ladder (LAD) model, compiler and scan-cycle runtime.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0
