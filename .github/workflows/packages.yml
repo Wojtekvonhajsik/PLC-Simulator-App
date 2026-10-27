@@ -1,17 +1,21 @@
-name: plc_core
+name: packages
 
 on:
   push:
-    paths: ['packages/plc_core/**', '.github/workflows/plc_core.yml']
+    paths: ['packages/**', '.github/workflows/packages.yml']
   pull_request:
-    paths: ['packages/plc_core/**', '.github/workflows/plc_core.yml']
+    paths: ['packages/**', '.github/workflows/packages.yml']
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [plc_core, plant_core]
     defaults:
       run:
-        working-directory: packages/plc_core
+        working-directory: packages/${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
